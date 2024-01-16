@@ -1,13 +1,12 @@
 Server:
   host: "localhost"
-  port: "8080"
-  storageMode: "inmemory"
+  port: "8081"
+  storageMode: "postgres"
 
 Postgres:
-  host: "localhost"
+  host: "database"
   port: "5432"
   dbname: "url_shortener"
   user: "postgres"
-  pass: "1234"
-  pgDriver: "pgx"
+  pass: "password"
   sslMode: "disable"

@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/spf13/viper"
 	"log"
+	"os"
 )
 
 type Config struct {
@@ -42,6 +43,7 @@ func LoadConfig() (*viper.Viper, error) {
 func ParseConfig(v *viper.Viper) (*Config, error) {
 	var c Config
 	err := v.Unmarshal(&c)
+	c.Server.StorageMode = os.Getenv("STORAGE_MODE")
 	if err != nil {
 		log.Fatalf("cant decode config into struct, %v", err)
 		return nil, err

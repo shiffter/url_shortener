@@ -3,11 +3,10 @@ package http
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	"url_shortener/internal/customError"
 	"url_shortener/internal/delivery"
 	"url_shortener/internal/usecase"
 )
@@ -16,10 +15,6 @@ type LinksHandler struct {
 	log     *logrus.Logger
 	linksUC usecase.LinksUsecase
 }
-
-//type LinksHandler interface {
-//	Pong(s int) error
-//}
 
 func NewLinksHandler(log *logrus.Logger, linksUC usecase.LinksUsecase) *LinksHandler {
 	return &LinksHandler{
@@ -30,20 +25,43 @@ func NewLinksHandler(log *logrus.Logger, linksUC usecase.LinksUsecase) *LinksHan
 
 func (lh *LinksHandler) CreateShortUrl() fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
-		createShortUrlParams := delivery.CreateShortUrlParams{}
+		createShortUrlRequest := delivery.CreateShortUrlRequest{}
 		bytesBody := ctx.Body()
-		err := json.Unmarshal(bytesBody, &createShortUrlParams)
+		err := json.Unmarshal(bytesBody, &createShortUrlRequest)
 		if err != nil {
 			lh.log.Error(err)
-			return err
+			sendStatusErr := ctx.SendStatus(http.StatusBadRequest)
+			if sendStatusErr != nil {
+				lh.log.Error(sendStatusErr.Error())
+			}
+			return ctx.JSON(delivery.CreateShortUrlResponse{Status: http.StatusBadRequest, Error: err.Error()})
 		}
-		shortUrl, err := lh.linksUC.CreateShortUrl(context.Background(), createShortUrlParams.OriginalUrl)
+		if len(createShortUrlRequest.OriginalUrl) == 0 {
+			err := customError.ErrBadRequest
+			lh.log.Error(err)
+			sendStatusErr := ctx.SendStatus(http.StatusBadRequest)
+			if sendStatusErr != nil {
+				lh.log.Error(sendStatusErr.Error())
+			}
+			return ctx.JSON(delivery.CreateShortUrlResponse{Status: http.StatusBadRequest, Error: err.Error()})
+		}
+
+		shortUrl, err := lh.linksUC.CreateShortUrl(context.Background(), createShortUrlRequest.OriginalUrl)
 		if err != nil {
 			lh.log.Error(err)
-			return err
+			if err.Error() == customError.UrlAlreadyExist.Error() {
+				sendStatusErr := ctx.SendStatus(http.StatusConflict)
+				if sendStatusErr != nil {
+					lh.log.Error(sendStatusErr.Error())
+				}
+				return ctx.JSON(delivery.CreateShortUrlResponse{Status: http.StatusConflict, Error: err.Error()})
+			}
+
+			return ctx.JSON(delivery.CreateShortUrlResponse{Status: http.StatusInternalServerError,
+				Error: customError.InternalErr.Error()})
 		}
-		resp := delivery.CreateShortUrlResponse{ShortUrl: shortUrl}
-		return ctx.JSON(resp)
+
+		return ctx.JSON(delivery.CreateShortUrlResponse{ShortUrl: shortUrl, Status: http.StatusOK})
 	}
 }
 
@@ -51,20 +69,31 @@ func (lh *LinksHandler) GetOriginalUrl() fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		shortUrl := ctx.Query("short_url")
 		if len(shortUrl) != 10 {
-			err := errors.New(fmt.Sprintf("bad request, wrong length=%d short url", len(shortUrl)))
+			err := customError.ErrBadRequest
 			lh.log.Error(err)
-			return err
+			sendStatusErr := ctx.SendStatus(http.StatusBadRequest)
+			if sendStatusErr != nil {
+				lh.log.Error(sendStatusErr.Error())
+			}
+			return ctx.JSON(delivery.GetOriginalUrlResponse{Status: http.StatusBadRequest, Error: err.Error()})
 		}
+
 		originalUrl, err := lh.linksUC.GetOriginalUrl(context.Background(), shortUrl)
 		if err != nil {
 			lh.log.Error(err)
 			if err.Error() == "no rows in result set" {
-				return ctx.SendStatus(http.StatusNotFound)
+				sendStatusErr := ctx.SendStatus(http.StatusNotFound)
+				if sendStatusErr != nil {
+					lh.log.Error(sendStatusErr.Error())
+				}
+				return ctx.JSON(delivery.GetOriginalUrlResponse{Status: http.StatusNotFound,
+					Error: customError.NotFound.Error()})
 			} else {
-				return ctx.SendStatus(http.StatusInternalServerError)
+				return ctx.JSON(delivery.GetOriginalUrlResponse{Status: http.StatusInternalServerError,
+					Error: customError.InternalErr.Error()})
 			}
 		}
-		resp := delivery.GetOriginalUrlResp{OriginalUrl: originalUrl}
-		return ctx.JSON(resp)
+
+		return ctx.JSON(delivery.GetOriginalUrlResponse{OriginalUrl: originalUrl, Status: http.StatusOK})
 	}
 }

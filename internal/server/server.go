@@ -28,12 +28,11 @@ func NewServer(cfg *config.Config, log *log.Logger) *Server {
 
 func (s *Server) Run() error {
 	if err := s.BuildSrv(s.fiber, s.log); err != nil {
-		s.log.Fatalf("Cannot map delivery: ", err)
+		s.log.Fatalf("Cannot map delivery: %s", err.Error())
 	}
 	s.log.Infof("Start server on port: %s:%s", s.cfg.Server.Host, s.cfg.Server.Port)
-	if err := s.fiber.Listen(fmt.Sprintf("%s:%s", s.cfg.Server.Host, s.cfg.Server.Port)); err != nil {
-		s.log.Fatalf("Error starting Server: ", err)
+	if err := s.fiber.Listen(fmt.Sprintf(":%s", s.cfg.Server.Port)); err != nil {
+		s.log.Fatalf("Error starting Server: %s", err.Error())
 	}
-
 	return nil
 }

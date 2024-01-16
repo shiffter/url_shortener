@@ -22,34 +22,12 @@ func NewLinksUsecase(log *logrus.Logger, storage storage.Storage) usecase.LinksU
 }
 
 func (lu *linksUsecase) CreateShortUrl(ctx context.Context, originalUrl string) (string, error) {
-	existingOriginalUrl, err := lu.storage.CheckExistingOriginalUrl(ctx, originalUrl)
-	if err != nil {
-		return "", err
-	}
-
-	if existingOriginalUrl {
-		shortUrl, err := lu.storage.GetShortUrl(ctx, originalUrl)
-		if err != nil {
-			return "", err
-		}
-		return shortUrl, nil
-	}
-
 	shortUrl := Hasher(originalUrl)
-	for existngShortUrl, err := lu.storage.CheckExistingShortUrl(ctx, shortUrl); existngShortUrl == true && err == nil; {
-		if err != nil {
-			lu.log.Error(err)
-			return "", err
-		}
-		shortUrl = Hasher(originalUrl)
-	}
-
-	err = lu.storage.SaveUrlPair(ctx, shortUrl, originalUrl)
+	err := lu.storage.SaveUrlPair(ctx, shortUrl, originalUrl)
 	if err != nil {
 		lu.log.Error(err)
 		return "", err
 	}
-
 	return shortUrl, nil
 }
 

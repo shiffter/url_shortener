@@ -21,10 +21,31 @@ ___
 ```
 
 ## Запросы
-### Общий вид
-
-`GET /get_short_url?short_url=value`
+### Создание короткого урла
+* Request
 ```
-POST /create_short_url
-body: {"original_url": "https://github.com"}
+curl -X POST "http://localhost:8081/get_short_url" -d "short_url=sun.com"
+```
+* Response
+``` json 
+{
+    "short_url": "tVzcw7MPjG",
+    "status": 200,
+    "Error": ""
+}
+```
+
+### Получение оригинального урла
+
+* Request
+```shell
+curl -X GET "http://localhost:8081/get_short_url?short_url=tVzcw7MPjG"
+```
+* Response
+```json
+{
+  "original_url": "sun.com",
+  "status": 200,
+  "Error": ""
+}
 ```

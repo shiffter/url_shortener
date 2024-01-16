@@ -12,7 +12,8 @@ COPY --from=builder /app/main /app/main
 COPY --from=builder /app/config /app/config
 WORKDIR /app
 
-EXPOSE 8080
+EXPOSE 8081
+
 RUN apk --no-cache add ca-certificates
 
 ENTRYPOINT ["./main"]

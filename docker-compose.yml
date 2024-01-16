@@ -5,6 +5,10 @@ services:
     image: postgres
     profiles:
       - postgres
+    environment:
+      POSTGRES_DB: "url_shortener"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "password"
     restart: always
     ports:
       - "5432:5432"
@@ -25,11 +29,10 @@ services:
       - postgres
     environment:
       - STORAGE_MODE=postgres
-    env_file: .env
     networks:
       - default
     ports:
-      - "8080:8080"
+      - "8081:8081"
     depends_on:
       database:
         condition: service_healthy
@@ -45,6 +48,6 @@ services:
     networks:
       - default
     ports:
-      - "8080:8080"
+      - "8081:8081"
 volumes:
   data:

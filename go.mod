@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/gofiber/fiber/v2 v2.51.0
+	github.com/golang/mock v1.6.0
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/jackc/pgx/v5 v5.5.1
 	github.com/lib/pq v1.2.0

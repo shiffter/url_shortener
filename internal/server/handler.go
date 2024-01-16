@@ -21,7 +21,7 @@ func (s *Server) BuildSrv(app *fiber.App, log *logrus.Logger) error {
 	}
 
 	linksUsecases := links_usecase.NewLinksUsecase(log, storageData)
-	linksHanlers := http.NewLinksHandler(log, linksUsecases)
-	http.MapLinksRoutes(app, linksHanlers)
+	linksHandlers := http.NewLinksHandler(log, linksUsecases)
+	http.MapLinksRoutes(app, linksHandlers)
 	return nil
 }
