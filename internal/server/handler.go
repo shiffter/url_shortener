@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
+	deliverygRPC "url_shortener/internal/delivery/grpc"
 	"url_shortener/internal/delivery/http"
 	"url_shortener/internal/storage"
 	"url_shortener/internal/storage/in_memory"
@@ -11,7 +12,7 @@ import (
 	"url_shortener/internal/usecase/links_usecase"
 )
 
-func (s *Server) BuildSrv(app *fiber.App, log *logrus.Logger) error {
+func (s *Server) BuildSrv(apphttp *fiber.App, log *logrus.Logger) error {
 
 	storageData := storage.Storage(nil)
 	if s.cfg.Server.StorageMode == "postgres" {
@@ -22,6 +23,8 @@ func (s *Server) BuildSrv(app *fiber.App, log *logrus.Logger) error {
 
 	linksUsecases := links_usecase.NewLinksUsecase(log, storageData)
 	linksHandlers := http.NewLinksHandler(log, linksUsecases)
-	http.MapLinksRoutes(app, linksHandlers)
+
+	http.MapLinksRoutes(apphttp, linksHandlers)
+	deliverygRPC.Register(s.grpc, linksUsecases)
 	return nil
 }
