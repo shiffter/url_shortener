@@ -55,7 +55,7 @@ func (s *Server) RunHttp() error {
 }
 
 func (s *Server) RunGrpc() error {
-	l, err := net.Listen("tcp", "localhost:6969")
+	l, err := net.Listen("tcp", ":6969")
 	if err != nil {
 		s.log.Fatalf("Error net listen grpc: %s", err.Error())
 	}

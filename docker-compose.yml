@@ -33,6 +33,7 @@ services:
       - default
     ports:
       - "8081:8081"
+      - "6969:6969"
     depends_on:
       database:
         condition: service_healthy
@@ -49,5 +50,6 @@ services:
       - default
     ports:
       - "8081:8081"
+      - "6969:6969"
 volumes:
   data:
